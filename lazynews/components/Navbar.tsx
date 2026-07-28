@@ -13,8 +13,8 @@ export default function Navbar() {
 
         {/* Right: Navigation Links */}
         <div className="flex items-center gap-20 font-body text-[16px] text-[#32302f]">
-          <a href="#" className="hover:opacity-70 hover:underline transition-opacity">top headlines</a>
-          <a href="#" className="hover:opacity-70 hover:underline transition-opacity">other headlines</a>
+          <a href="#top-headlines" className="hover:opacity-70 hover:underline transition-opacity">top headlines</a>
+          <a href="#other-headlines" className="hover:opacity-70 hover:underline transition-opacity">other headlines</a>
           <a href="#" className="hover:opacity-70 hover:underline transition-opacity">why?</a>
         </div>
       </div>
