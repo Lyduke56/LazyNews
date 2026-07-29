@@ -6,7 +6,7 @@ export interface Article {
   imageUrl: string;
   topic: string;
   isBanger: boolean;
-  publishedAt?: string;
-  sourceUrl?: string;
-  sourceName?: string;
+  publishedAt: string;
+  sourceUrl: string;
+  sourceName: string;
 }
