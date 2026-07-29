@@ -5,3 +5,22 @@
 html {
   scroll-behavior: smooth;
 }
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #d2cac5;
+    border-radius: 20px;
+    border: 2px solid #F2F2F2;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #847f7c;
+  }
+}  
+ 

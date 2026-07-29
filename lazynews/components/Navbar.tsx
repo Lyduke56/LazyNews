@@ -8,7 +8,7 @@ export default function Navbar() {
         {/* Left: Logo */}
         <div className="flex items-center gap-2">
           <Home className="w-5 h-5 text-[#32302f]" strokeWidth={2.5} />
-          <span className="font-display font-bold text-xl text-[#32302f]">lazynews</span>
+          <span className="font-display font-bold text-xl text-[#32302f]">LazyNews</span>
         </div>
 
         {/* Right: Navigation Links */}

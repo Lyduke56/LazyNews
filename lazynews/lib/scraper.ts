@@ -45,40 +45,42 @@ const BANGER_COUNT = 10;
 
 // ---------------------------------------------------------------------------
 // Topic keyword classification
+// Uses word-boundary regex to prevent partial-word false positives
+// (e.g. "game" won't match "engagement", "sport" won't match "sporting goods")
 // ---------------------------------------------------------------------------
 const TOPIC_KEYWORDS: Record<string, string[]> = {
   Technology: [
     'ai', 'artificial intelligence', 'tech', 'software', 'hardware', 'apple',
     'google', 'microsoft', 'meta', 'openai', 'robot', 'cyber', 'digital',
     'startup', 'app', 'data', 'cloud', 'chip', 'semiconductor', 'elon',
-    'spacex', 'tesla', 'nvidia', 'quantum',
+    'spacex', 'tesla', 'nvidia', 'quantum', 'programming', 'developer',
   ],
   Politics: [
     'president', 'election', 'vote', 'congress', 'senate', 'parliament',
     'minister', 'government', 'policy', 'democrat', 'republican', 'trump',
-    'biden', 'white house', 'kremlin', 'nato', 'un ', 'united nations',
-    'diplomacy', 'sanction', 'treaty', 'legislation', 'law',
+    'biden', 'white house', 'kremlin', 'nato', 'united nations',
+    'diplomacy', 'sanction', 'treaty', 'legislation',
   ],
   Business: [
     'market', 'stock', 'economy', 'gdp', 'inflation', 'trade', 'bank',
-    'investment', 'company', 'corporate', 'earnings', 'revenue', 'profit',
-    'merger', 'acquisition', 'ipo', 'fed ', 'interest rate', 'recession',
-    'oil', 'energy', 'finance',
+    'investment', 'corporate', 'earnings', 'revenue', 'profit',
+    'merger', 'acquisition', 'ipo', 'interest rate', 'recession',
+    'oil', 'energy', 'finance', 'cryptocurrency', 'bitcoin',
   ],
   Sports: [
-    'game', 'match', 'team', 'player', 'coach', 'league', 'tournament',
+    'match', 'team', 'player', 'coach', 'league', 'tournament',
     'championship', 'olympic', 'nba', 'nfl', 'soccer', 'football',
-    'basketball', 'tennis', 'golf', 'cricket', 'athlete', 'sport',
+    'basketball', 'tennis', 'golf', 'cricket', 'athlete',
   ],
   Entertainment: [
     'movie', 'film', 'music', 'album', 'celebrity', 'actor', 'director',
     'award', 'oscar', 'grammy', 'netflix', 'disney', 'concert', 'artist',
-    'song', 'show', 'series', 'streaming', 'box office',
+    'song', 'streaming', 'box office',
   ],
   Health: [
     'health', 'medical', 'hospital', 'doctor', 'drug', 'vaccine', 'disease',
-    'cancer', 'mental health', 'fda', 'who ', 'pandemic', 'virus', 'outbreak',
-    'clinical', 'study', 'research', 'diet', 'exercise', 'surgery',
+    'cancer', 'mental health', 'fda', 'pandemic', 'virus', 'outbreak',
+    'clinical', 'diet', 'exercise', 'surgery', 'medicine',
   ],
   Science: [
     'science', 'nasa', 'space', 'planet', 'climate', 'environment',
@@ -87,6 +89,14 @@ const TOPIC_KEYWORDS: Record<string, string[]> = {
   ],
   World: [],
 };
+
+// Pre-compile regexes once at module load for performance
+const TOPIC_REGEXES: Record<string, RegExp[]> = Object.fromEntries(
+  Object.entries(TOPIC_KEYWORDS).map(([topic, keywords]) => [
+    topic,
+    keywords.map((kw) => new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')),
+  ])
+);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -128,10 +138,9 @@ function makeSummary(body: string): string {
 }
 
 function classifyTopic(text: string, defaultTopic: string): string {
-  const lower = text.toLowerCase();
-  for (const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)) {
+  for (const [topic, regexes] of Object.entries(TOPIC_REGEXES)) {
     if (topic === 'World') continue;
-    if (keywords.some((kw) => lower.includes(kw))) return topic;
+    if (regexes.some((re) => re.test(text))) return topic;
   }
   return defaultTopic;
 }
@@ -197,6 +206,78 @@ Response format: ["id1","id2","id3",...]`;
 }
 
 // ---------------------------------------------------------------------------
+// Single feed parser (used in parallel)
+// ---------------------------------------------------------------------------
+
+type RawArticle = Omit<Article, 'isBanger'> & { score: number };
+
+async function parseFeed(
+  parser: Parser,
+  feed: { url: string; name: string; defaultTopic: string }
+): Promise<RawArticle[]> {
+  try {
+    const result = await parser.parseURL(feed.url);
+    const articles: RawArticle[] = [];
+
+    for (const item of result.items.slice(0, 10)) {
+      if (!item.title) continue;
+
+      const rawItem = item as unknown as Record<
+        string,
+        string & { $?: { url?: string }; url?: string }
+      >;
+
+      const rawBody =
+        rawItem['content:encoded'] ||
+        item.content ||
+        item.contentSnippet ||
+        item.summary ||
+        '';
+      const body = stripHtml(rawBody);
+
+      let imageUrl =
+        rawItem['mediaContent']?.$?.url ||
+        rawItem['mediaThumbnail']?.$?.url ||
+        rawItem['enclosure']?.url ||
+        '';
+
+      if (!imageUrl && rawBody) {
+        const match = rawBody.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (match) imageUrl = match[1];
+      }
+
+      const title = stripHtml(item.title || '');
+      const publishedAt = item.isoDate || item.pubDate || new Date().toISOString();
+      const combinedText = title + ' ' + stripHtml(item.contentSnippet || item.summary || '');
+      const topic = classifyTopic(combinedText, feed.defaultTopic);
+      const summary = makeSummary(body || stripHtml(item.contentSnippet || item.summary || ''));
+
+      // Recency score for initial ordering (used before LLM ranking)
+      const ageHours = (Date.now() - new Date(publishedAt).getTime()) / 36e5;
+      const score = ageHours < 3 ? 5 : ageHours < 6 ? 3 : ageHours < 12 ? 1 : 0;
+
+      articles.push({
+        id: slugify(title),
+        title,
+        summary,
+        body: body || summary,
+        imageUrl,
+        topic,
+        publishedAt,
+        sourceUrl: item.link || '',
+        sourceName: feed.name,
+        score,
+      });
+    }
+
+    return articles;
+  } catch (err) {
+    console.warn(`[scraper] Failed to fetch ${feed.url}:`, err);
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Main scraper
 // ---------------------------------------------------------------------------
 
@@ -211,67 +292,21 @@ export async function scrapeArticles(): Promise<Article[]> {
     },
   });
 
-  const rawArticles: (Omit<Article, 'isBanger'> & { score: number })[] = [];
+  // ── Fetch all feeds in parallel ──────────────────────────────────────────
+  const feedResults = await Promise.allSettled(
+    RSS_FEEDS.map((feed) => parseFeed(parser, feed))
+  );
+
   const seen = new Set<string>();
+  const rawArticles: RawArticle[] = [];
 
-  for (const feed of RSS_FEEDS) {
-    try {
-      const result = await parser.parseURL(feed.url);
-
-      for (const item of result.items.slice(0, 10)) {
-        const titleKey = (item.title || '').toLowerCase().slice(0, 60);
-        if (seen.has(titleKey) || !item.title) continue;
-        seen.add(titleKey);
-
-        const rawItem = item as unknown as Record<
-          string,
-          string & { $?: { url?: string }; url?: string }
-        >;
-
-        const rawBody =
-          rawItem['content:encoded'] ||
-          item.content ||
-          item.contentSnippet ||
-          item.summary ||
-          '';
-        const body = stripHtml(rawBody);
-
-        let imageUrl =
-          rawItem['mediaContent']?.$?.url ||
-          rawItem['mediaThumbnail']?.$?.url ||
-          rawItem['enclosure']?.url ||
-          '';
-
-        if (!imageUrl && rawBody) {
-          const match = rawBody.match(/<img[^>]+src=["']([^"']+)["']/i);
-          if (match) imageUrl = match[1];
-        }
-
-        const title = stripHtml(item.title || '');
-        const publishedAt = item.isoDate || item.pubDate || new Date().toISOString();
-        const combinedText = title + ' ' + stripHtml(item.contentSnippet || item.summary || '');
-        const topic = classifyTopic(combinedText, feed.defaultTopic);
-        const summary = makeSummary(body || stripHtml(item.contentSnippet || item.summary || ''));
-
-        // Recency score for initial ordering (used before LLM ranking)
-        const ageHours = (Date.now() - new Date(publishedAt).getTime()) / 36e5;
-        const score = ageHours < 3 ? 5 : ageHours < 6 ? 3 : ageHours < 12 ? 1 : 0;
-
-        rawArticles.push({
-          id: slugify(title),
-          title,
-          summary,
-          body: body || summary,
-          imageUrl,
-          topic,
-          publishedAt,
-          sourceUrl: item.link || '',
-          sourceName: feed.name,
-          score,
-        });
-      }
-    } catch (err) {
-      console.warn(`[scraper] Failed to fetch ${feed.url}:`, err);
+  for (const result of feedResults) {
+    if (result.status !== 'fulfilled') continue;
+    for (const article of result.value) {
+      const titleKey = article.title.toLowerCase().slice(0, 60);
+      if (seen.has(titleKey)) continue;
+      seen.add(titleKey);
+      rawArticles.push(article);
     }
   }
 
