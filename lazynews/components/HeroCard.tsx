@@ -1,6 +1,9 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles } from 'lucide-react';
+import Image from 'next/image';
 import { formatAbsoluteTime } from '@/lib/formatDate';
 
 interface HeroCardProps {
@@ -23,17 +26,21 @@ export function HeroCardImage({
   layoutId?: string;
   sourceUrl?: string;
 }) {
+  const [imgSrc, setImgSrc] = useState(imageUrl || '/fallback.svg');
+
   const content = (
     <motion.div
       layoutId={layoutId ? `${layoutId}-image` : undefined}
-      className="w-[780px] h-[416px] overflow-hidden rounded-md border border-neutral-300 bg-[#32302f] flex items-center justify-center"
+      className="w-full lg:w-[780px] h-[250px] sm:h-[350px] lg:h-[416px] overflow-hidden rounded-md border border-neutral-300 bg-[#1c1a19] flex items-center justify-center relative shadow-inner shrink-0"
     >
-      <img
-        src={imageUrl || '/fallback.svg'}
+      <Image
+        src={imgSrc}
         alt="Hero thumbnail"
-        className="w-full h-full object-contain"
-        onError={(e) => {
-          (e.currentTarget as HTMLImageElement).src = '/fallback.svg';
+        fill
+        sizes="(max-width: 1024px) 100vw, 780px"
+        className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+        onError={() => {
+          if (imgSrc !== '/fallback.svg') setImgSrc('/fallback.svg');
         }}
       />
     </motion.div>
@@ -41,7 +48,7 @@ export function HeroCardImage({
 
   if (sourceUrl) {
     return (
-      <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="cursor-pointer">
+      <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="block cursor-pointer overflow-hidden rounded-md">
         {content}
       </a>
     );
@@ -65,31 +72,31 @@ export function HeroCardTitle({
   return (
     <motion.div
       layoutId={layoutId ? `${layoutId}-title` : undefined}
-      className="w-[780px] h-[140px] px-4 pb-4 pt-1 flex flex-col justify-between"
+      className="w-full lg:w-[780px] px-2 sm:px-4 pb-4 pt-3 lg:pt-1 flex flex-col justify-between"
     >
-      <h2 className="font-body text-[32px] font-semibold leading-[1.3] text-[#32302f] line-clamp-2 pb-2">
+      <h2 className="font-body text-[24px] sm:text-[28px] lg:text-[32px] font-semibold leading-[1.3] text-[#32302f] line-clamp-3 lg:line-clamp-2 pb-2">
         {title || 'Headline Unavailable'}
       </h2>
       {(sourceName || publishedAt) && (
-        <div className="flex items-center gap-2 mt-2">
+        <div className="flex flex-wrap items-center gap-2 mt-2">
           {sourceName && sourceUrl ? (
             <a
               href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-display text-[16px] font-bold text-[#32302f] hover:text-[#000000] transition-colors"
+              className="font-display text-[14px] sm:text-[16px] font-bold text-[#32302f] hover:text-[#000000] hover:underline transition-all"
             >
               {sourceName}
             </a>
           ) : (
-            <span className="font-display text-[16px] font-bold text-[#32302f]">{sourceName}</span>
+            <span className="font-display text-[14px] sm:text-[16px] font-bold text-[#32302f]">{sourceName}</span>
           )}
           {publishedAt && (
             <>
               <span className="text-[#d2cac5]">·</span>
-              <span className="font-display text-[16px] text-[#847f7c]">
+              <time dateTime={publishedAt} className="font-display text-[14px] sm:text-[16px] text-[#847f7c]">
                 {formatAbsoluteTime(publishedAt)}
-              </span>
+              </time>
             </>
           )}
         </div>
@@ -100,11 +107,13 @@ export function HeroCardTitle({
 
 export function HeroCardArticleSummary({ summary, aiReason }: { summary?: string; aiReason?: string }) {
   return (
-    // Extends to fill entire right column: 416px image + 12px gap + 140px title = 568px
-    <div className="w-[376px] h-[568px] flex flex-col gap-3">
+    <div className="w-full lg:w-[376px] lg:h-[568px] flex flex-col gap-3 shrink-0">
       {/* Top box: Article Summary */}
-      <div className="flex-1 bg-[#f6e0b5] rounded-md p-4 border border-neutral-300 flex flex-col min-h-0">
-        <div className="flex items-center gap-2 mb-3 shrink-0">
+      <div className="flex-1 bg-white/60 backdrop-blur-md rounded-md p-4 border border-white/40 shadow-sm flex flex-col min-h-[200px] lg:min-h-0 relative overflow-hidden group/summary hover:bg-white/80 transition-colors duration-300">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#f6e0b5]/20 to-transparent pointer-events-none" />
+        
+        <div className="flex items-center gap-2 mb-3 shrink-0 relative z-10">
           <svg
             width="24"
             height="24"
@@ -114,7 +123,7 @@ export function HeroCardArticleSummary({ summary, aiReason }: { summary?: string
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-[#32302f]"
+            className="text-[#8b7355]"
           >
             <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
             <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
@@ -122,25 +131,28 @@ export function HeroCardArticleSummary({ summary, aiReason }: { summary?: string
             <line x1="10" x2="10" y1="2" y2="4" />
             <line x1="14" x2="14" y1="2" y2="4" />
           </svg>
-          <span className="font-display text-[20px] font-bold text-[#32302f]">Article Summary</span>
+          <span className="font-display text-[18px] sm:text-[20px] font-bold text-[#32302f]">Article Summary</span>
         </div>
         {/* Scrollable body */}
-        <div className="overflow-y-auto custom-scrollbar flex-1 pr-3">
-          <p className="font-display text-[clamp(16px,1.5vw,20px)] text-[#32302f] leading-[1.8] tracking-wide text-justify">
+        <div className="overflow-y-auto custom-scrollbar flex-1 pr-3 relative z-10">
+          <p className="font-display text-[15px] sm:text-[16px] lg:text-[clamp(16px,1.5vw,18px)] text-[#4a4745] leading-[1.8] tracking-wide text-justify">
             {summary || 'No summary available.'}
           </p>
         </div>
       </div>
 
       {/* Bottom box: AI Reason */}
-      <div className="h-[220px] bg-[#e9e0d4] rounded-md p-4 border border-neutral-300 flex flex-col shrink-0">
-        <div className="flex items-center gap-2 mb-3 shrink-0">
-          <Sparkles className="w-5 h-5 text-[#32302f]" />
-          <span className="font-display text-[20px] font-bold text-[#32302f]">Why it's a Banger</span>
+      <div className="h-auto lg:h-[220px] bg-gradient-to-br from-[#1c1a19] to-[#32302f] rounded-md p-4 border border-[#4a4745] shadow-sm flex flex-col shrink-0 text-white relative overflow-hidden group/reason hover:shadow-md transition-shadow duration-300">
+        {/* Glass highlight effect */}
+        <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover/reason:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        
+        <div className="flex items-center gap-2 mb-3 shrink-0 relative z-10">
+          <Sparkles className="w-5 h-5 text-[#f6e0b5]" />
+          <span className="font-display text-[18px] sm:text-[20px] font-bold text-[#f6e0b5]">Why it's a Banger</span>
         </div>
         {/* Scrollable body */}
-        <div className="overflow-y-auto custom-scrollbar flex-1 pr-3">
-          <p className="font-display text-[15px] text-[#847f7c] leading-[1.7] text-justify">
+        <div className="overflow-y-auto custom-scrollbar flex-1 pr-3 relative z-10">
+          <p className="font-display text-[14px] sm:text-[15px] text-[#d2cac5] leading-[1.7] text-justify">
             {aiReason || 'This article was flagged as a banger because it covers high-impact geopolitical events with significant global consequences and trending engagement metrics.'}
           </p>
         </div>
@@ -151,25 +163,25 @@ export function HeroCardArticleSummary({ summary, aiReason }: { summary?: string
 
 export default function HeroCard(props: HeroCardProps) {
   return (
-    // 1200x600, 16px edge padding
-    <motion.div
+    <motion.article
       layoutId={props.id}
-      className="relative w-[1200px] h-[600px] border border-neutral-300 p-[16px] rounded-xl shadow-sm overflow-hidden bg-[#F4EEE0]"
+      className="relative w-full max-w-[1200px] h-auto lg:h-[600px] border border-neutral-300 p-3 sm:p-4 rounded-xl shadow-sm overflow-hidden bg-[#F4EEE0] group hover:shadow-md transition-all duration-300 mx-auto"
     >
-      {/* Background image layer at 50% opacity */}
+      {/* Background image layer with blur and gradient overlay for modern feel */}
       <div
-        className="absolute inset-0 z-0 opacity-50"
+        className="absolute inset-0 z-0 opacity-[0.35]"
         style={{
           backgroundImage: 'url(/card-bg.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
       />
+      <div className="absolute inset-0 z-0 bg-gradient-to-tr from-[#F4EEE0]/80 via-transparent to-[#f6e0b5]/20 pointer-events-none" />
 
       {/* Content wrapper */}
-      <div className="relative z-10 flex gap-[12px] w-full h-full">
+      <div className="relative z-10 flex flex-col lg:flex-row gap-3 lg:gap-[12px] w-full h-full">
         {/* Left Column: Image + Title */}
-        <div className="flex flex-col gap-[12px]">
+        <div className="flex flex-col gap-3 lg:gap-[12px] flex-1 min-w-0">
           <HeroCardImage
             imageUrl={props.imageUrl}
             layoutId={props.id}
@@ -184,10 +196,9 @@ export default function HeroCard(props: HeroCardProps) {
           />
         </div>
 
-        <div className="shrink-0">
-          <HeroCardArticleSummary summary={props.summary} aiReason={props.aiReason} />
-        </div>
+        {/* Right Column: Summaries */}
+        <HeroCardArticleSummary summary={props.summary} aiReason={props.aiReason} />
       </div>
-    </motion.div>
+    </motion.article>
   );
 }
