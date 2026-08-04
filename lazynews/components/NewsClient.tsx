@@ -117,16 +117,16 @@ export default function NewsClient({
       <div className="max-w-[1600px] w-full flex flex-col items-center gap-[12px]">
 
         {/* ── SECTION 1: BANGER HEADLINES ───────────────────────────────── */}
-        <div className="w-[1200px] flex flex-col mb-1">
-          <div className="flex items-end justify-between">
+        <div className="w-full max-w-[1200px] px-4 lg:px-0 flex flex-col mb-1">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h1 className="font-body text-[48px] text-[#32302f] tracking-[0.08em]">Banger Headlines</h1>
-              <p className="font-body text-[20px] text-[#847f7c]">
+              <h1 className="font-body text-[36px] sm:text-[48px] text-[#32302f] tracking-[0.08em]">Banger Headlines</h1>
+              <p className="font-body text-[16px] sm:text-[20px] text-[#847f7c]">
                 Curated bangers based on my chosen news preferences, we ballin&apos;.
               </p>
             </div>
             {/* Last updated + Refresh */}
-            <div className="flex items-center gap-3 pb-2">
+            <div className="flex items-center gap-3 pb-2 shrink-0">
               {fetchedAt && (
                 <span className="font-display text-[13px] text-[#847f7c]">
                   Updated {formatRelativeTime(fetchedAt)}
@@ -147,18 +147,18 @@ export default function NewsClient({
         </div>
 
         {isRefreshing ? (
-          <>
+          <div className="w-full max-w-[1200px] px-4 lg:px-0">
             <HeroCardSkeleton />
-            <div className="flex items-center gap-[20px] mt-4 mb-4">
-              <div className="w-14 h-14 rounded-full bg-[#e5e5e5] shrink-0 animate-pulse" />
-              <div className="w-[1200px] h-[200px] flex gap-[12px]">
+            <div className="flex items-center gap-[20px] mt-4 mb-4 overflow-hidden">
+              <div className="w-14 h-14 rounded-full bg-[#e5e5e5] shrink-0 animate-pulse hidden sm:flex" />
+              <div className="w-full lg:w-[1200px] h-[200px] flex gap-[12px] overflow-hidden">
                 <BangerCarouselCardSkeleton />
                 <BangerCarouselCardSkeleton />
                 <BangerCarouselCardSkeleton />
               </div>
-              <div className="w-14 h-14 rounded-full bg-[#e5e5e5] shrink-0 animate-pulse" />
+              <div className="w-14 h-14 rounded-full bg-[#e5e5e5] shrink-0 animate-pulse hidden sm:flex" />
             </div>
-          </>
+          </div>
         ) : (
           <LayoutGroup>
             <AnimatePresence mode="popLayout">
@@ -168,6 +168,7 @@ export default function NewsClient({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
+                className="w-full px-4 lg:px-0"
               >
                 <HeroCard
                   id={activeArticle?.id}
@@ -181,15 +182,16 @@ export default function NewsClient({
               </motion.div>
             </AnimatePresence>
 
-            <div className="flex items-center gap-[20px] mt-4 mb-4">
+            <div className="w-full max-w-[1200px] flex items-center gap-[10px] sm:gap-[20px] mt-4 mb-4 px-4 lg:px-0">
               <button
                 onClick={handlePrevPage}
-                className="w-14 h-14 rounded-full bg-[#e5e5e5] hover:bg-[#d2cac5] transition-colors flex items-center justify-center shrink-0"
+                className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-[#e5e5e5] hover:bg-[#d2cac5] transition-colors flex items-center justify-center shrink-0"
+                aria-label="Previous banger articles"
               >
-                <ChevronLeft className="w-8 h-8 text-[#000000]" strokeWidth={3} />
+                <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8 text-[#000000]" strokeWidth={3} />
               </button>
 
-              <div className="w-[1200px] h-[200px] relative">
+              <div className="w-full lg:w-[1200px] h-[200px] relative overflow-hidden">
                 <AnimatePresence mode="popLayout" custom={direction} initial={false}>
                   <motion.div
                     key={page}
@@ -199,18 +201,19 @@ export default function NewsClient({
                     animate="center"
                     exit="exit"
                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    className="flex gap-[12px] w-full absolute inset-0"
+                    className="flex gap-[12px] w-full absolute inset-0 overflow-x-auto sm:overflow-hidden snap-x snap-mandatory custom-scrollbar pb-2 sm:pb-0"
                   >
                     {visibleCarouselArticles.map((article) => (
-                      <BangerCarouselCard
-                        key={article.id}
-                        id={article.id}
-                        title={article.title}
-                        imageUrl={article.imageUrl}
-                        sourceName={article.sourceName}
-                        publishedAt={article.publishedAt}
-                        onClick={() => setActiveId(article.id)}
-                      />
+                      <div key={article.id} className="snap-center shrink-0 w-full sm:w-auto">
+                        <BangerCarouselCard
+                          id={article.id}
+                          title={article.title}
+                          imageUrl={article.imageUrl}
+                          sourceName={article.sourceName}
+                          publishedAt={article.publishedAt}
+                          onClick={() => setActiveId(article.id)}
+                        />
+                      </div>
                     ))}
                   </motion.div>
                 </AnimatePresence>
@@ -218,9 +221,10 @@ export default function NewsClient({
 
               <button
                 onClick={handleNextPage}
-                className="w-14 h-14 rounded-full bg-[#e5e5e5] hover:bg-[#d2cac5] transition-colors flex items-center justify-center shrink-0"
+                className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-[#e5e5e5] hover:bg-[#d2cac5] transition-colors flex items-center justify-center shrink-0"
+                aria-label="Next banger articles"
               >
-                <ChevronRight className="w-8 h-8 text-[#000000]" strokeWidth={3} />
+                <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 text-[#000000]" strokeWidth={3} />
               </button>
             </div>
           </LayoutGroup>
@@ -229,15 +233,15 @@ export default function NewsClient({
         {/* ── SECTION DIVIDER ───────────────────────────────────────────── */}
         <hr
           id="other-headlines"
-          className="w-[1200px] border-t-2 border-[#d2cac5] mt-8 mb-2 opacity-60 scroll-mt-[41px]"
+          className="w-full max-w-[1200px] border-t-2 border-[#d2cac5] mt-8 mb-2 opacity-60 scroll-mt-[41px]"
         />
 
         {/* ── SECTION 2: OTHER ARTICLES TITLE ───────────────────────────── */}
-        <div className="w-[1200px] flex flex-col mb-4">
+        <div className="w-full max-w-[1200px] px-4 lg:px-0 flex flex-col mb-4">
           <div className="flex justify-between items-end">
             <div className="flex flex-col">
-              <h2 className="font-body text-[48px] text-[#32302f] tracking-[0.08em] leading-none">Other Articles</h2>
-              <p className="font-body text-[20px] text-[#847f7c] mt-2">
+              <h2 className="font-body text-[36px] sm:text-[48px] text-[#32302f] tracking-[0.08em] leading-none">Other Articles</h2>
+              <p className="font-body text-[16px] sm:text-[20px] text-[#847f7c] mt-2">
                 still curated bangers based on my preferences but not as heavy as the ones above in terms of what it&apos;s about.
               </p>
             </div>
@@ -245,26 +249,28 @@ export default function NewsClient({
         </div>
 
         {/* ── OTHER ARTICLES TABLE COMPONENT ────────────────────────────── */}
-        <div className="w-full flex flex-col border border-neutral-300 rounded-2xl overflow-hidden shadow-sm bg-[#F2F2F2] max-h-[1100px] h-[85vh]">
+        <div className="w-full flex flex-col border border-neutral-300 sm:rounded-2xl overflow-hidden shadow-sm bg-[#F2F2F2] min-h-[1100px] lg:max-h-[1100px] lg:h-[85vh]">
           
           {/* Static Filtering Header */}
           <div className="w-full flex flex-col items-center py-5 px-4 bg-[#f8f5f0] border-b border-neutral-300 shrink-0">
-            <div className="w-[1200px] flex flex-col gap-4">
+            <div className="w-full max-w-[1200px] flex flex-col gap-4">
             
             {/* Top Row: Search (Left) & Pagination (Right) */}
-            <div className="flex justify-between items-center px-2">
-              <div className="relative w-full max-w-[720px]">
+            <div className="flex flex-col sm:flex-row justify-between items-center px-2 gap-4">
+              <div className="relative w-full sm:max-w-[720px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#847f7c]" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="Search articles by title or summary…"
-                  className="w-full pl-9 pr-9 py-2 rounded-full border border-neutral-300 bg-[#e9e0d4] font-display text-[14px] text-[#32302f] placeholder:text-[#847f7c] focus:outline-none focus:border-[#32302f] transition-colors"
+                  aria-label="Search articles"
+                  className="w-full pl-9 pr-9 py-2 rounded-full border border-neutral-300 bg-[#e9e0d4] font-display text-[14px] text-[#32302f] placeholder:text-[#847f7c] focus:outline-none focus:border-[#32302f] focus:ring-2 focus:ring-[#8b7355]/30 transition-all"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => handleSearchChange('')}
+                    aria-label="Clear search"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[#847f7c] hover:text-[#32302f] transition-colors"
                   >
                     <X className="w-4 h-4" />
@@ -272,7 +278,7 @@ export default function NewsClient({
                 )}
               </div>
 
-              <div className="shrink-0">
+              <div className="shrink-0 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 hide-scrollbar flex justify-center">
                 <ContinuousPagination
                   totalPages={totalOtherPages}
                   currentPage={otherPage + 1}
@@ -282,7 +288,7 @@ export default function NewsClient({
             </div>
 
             {/* Bottom Row: Funnel Topics (5 top, 4 bottom) */}
-            <div className="flex flex-col gap-3 items-center">
+            <div className="flex flex-col gap-2 sm:gap-3 items-center">
               <div className="flex justify-center gap-3">
                 {TOPICS_ROW_1.map((topic) => (
                   <TopicPill
@@ -308,9 +314,9 @@ export default function NewsClient({
         </div>
 
           {/* Scrollable Grid Area */}
-          <div className="w-full flex-1 overflow-y-auto py-8 custom-scrollbar relative">
-            <div className="flex flex-col items-center gap-[40px] w-full">
-              <div className="w-full max-w-[1600px] h-[942px] relative">
+          <div className="w-full flex-1 overflow-y-auto py-4 sm:py-8 custom-scrollbar relative">
+            <div className="flex flex-col items-center gap-[40px] w-full px-2 sm:px-4">
+              <div className="w-full max-w-[1600px] min-h-[942px] relative">
             {filteredOther.length === 0 ? (
               <div className="absolute inset-0 flex items-center justify-center rounded-xl border border-neutral-200 bg-[#F4EEE0]">
                 <p className="font-display text-[18px] text-[#847f7c]">
@@ -329,7 +335,7 @@ export default function NewsClient({
                   animate="center"
                   exit="exit"
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-[6px]"
+                  className="w-full lg:absolute lg:inset-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 auto-rows-[310px] gap-3"
                 >
                   {visibleOtherArticles.map((article) => (
                     <OtherCard

@@ -35,9 +35,9 @@ export default async function Home() {
 
       {/* FOOTER */}
       <footer className="w-full flex justify-center border-t-2 border-[#d2cac5] bg-[#F2F2F2] py-8 mt-2 opacity-80">
-        <div className="w-[1200px] flex justify-between items-center font-display text-[#847f7c] text-sm">
+        <div className="w-full max-w-[1200px] px-4 flex flex-col sm:flex-row justify-between items-center font-display text-[#847f7c] text-sm gap-4">
           <span>© 2026 LazyNews by Lyduke.</span>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <a href="#" className="hover:text-[#32302f] transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-[#32302f] transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-[#32302f] transition-colors">Contact</a>

@@ -15,8 +15,34 @@ const inika = Inika({
 });
 
 export const metadata: Metadata = {
-  title: 'Lazynews',
-  description: 'A customized news scraper',
+  metadataBase: new URL('https://lazynews.lyduke.com'),
+  title: {
+    default: 'LazyNews | Your Curated Banger Headlines',
+    template: '%s | LazyNews',
+  },
+  description: 'LazyNews is a customized news scraper bringing you curated high-impact banger headlines and summarized updates based on your preferences.',
+  openGraph: {
+    title: 'LazyNews | Your Curated Banger Headlines',
+    description: 'Customized news scraper delivering top-tier banger headlines.',
+    url: 'https://lazynews.lyduke.com', // Placeholder URL
+    siteName: 'LazyNews',
+    images: [
+      {
+        url: '/card-bg.jpg', // Placeholder OG image
+        width: 1200,
+        height: 630,
+        alt: 'LazyNews OpenGraph Image',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'LazyNews | Your Curated Banger Headlines',
+    description: 'Customized news scraper delivering top-tier banger headlines.',
+    images: ['/card-bg.jpg'],
+  },
 };
 
 export default function RootLayout({
