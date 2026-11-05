@@ -1,5 +1,6 @@
 import Parser from 'rss-parser';
 import { Article } from '@/types/article';
+import { selectRankedIds, sortFeaturedFirst } from './ranking';
 
 // ---------------------------------------------------------------------------
 // RSS Feed Sources
@@ -180,6 +181,7 @@ Response format: ["id1","id2","id3",...]`;
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
+        signal: AbortSignal.timeout(15_000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
@@ -198,7 +200,7 @@ Response format: ["id1","id2","id3",...]`;
     const parsed: string[] = JSON.parse(clean);
 
     if (!Array.isArray(parsed)) throw new Error('LLM did not return array');
-    return parsed.slice(0, BANGER_COUNT);
+    return selectRankedIds(articles.map((a) => a.id), parsed, BANGER_COUNT);
   } catch (err) {
     console.warn('[scraper] LLM ranking failed, falling back to first', BANGER_COUNT, ':', err);
     return articles.slice(0, BANGER_COUNT).map((a) => a.id);
@@ -283,6 +285,7 @@ async function parseFeed(
 
 export async function scrapeArticles(): Promise<Article[]> {
   const parser = new Parser({
+    timeout: 10_000,
     customFields: {
       item: [
         ['media:content', 'mediaContent', { keepArray: false }],
@@ -318,15 +321,14 @@ export async function scrapeArticles(): Promise<Article[]> {
 
   // Take top 30 candidates and let Gemini pick the best BANGER_COUNT
   const candidates = rawArticles.slice(0, 30);
-  const bangerIds = new Set(
-    await rankBangersByLLM(
-      candidates.map((a) => ({ id: a.id, title: a.title, summary: a.summary }))
-    )
+  const rankedIds = await rankBangersByLLM(
+    candidates.map((a) => ({ id: a.id, title: a.title, summary: a.summary }))
   );
+  const bangerIds = new Set(rankedIds);
 
   // ── Cap other articles per topic at MAX_PER_TOPIC ──────────────────────
   const topicCounts: Record<string, number> = {};
-  const finalArticles: Article[] = [];
+  const finalArticles: (RawArticle & { isBanger: boolean })[] = [];
 
   for (const article of rawArticles) {
     const isBanger = bangerIds.has(article.id);
@@ -344,8 +346,11 @@ export async function scrapeArticles(): Promise<Article[]> {
   }
 
   // Ensure bangers come first in the response
-  finalArticles.sort((a, b) => (b.isBanger ? 1 : 0) - (a.isBanger ? 1 : 0));
+  sortFeaturedFirst(finalArticles, rankedIds);
 
   // Strip internal score field
-  return finalArticles.map(({ ...rest }) => rest as Article);
+  return finalArticles.map(({ score, ...article }) => {
+    void score;
+    return article;
+  });
 }

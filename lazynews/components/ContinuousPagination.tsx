@@ -35,12 +35,14 @@ function getPageWindow(currentPage: number, totalPages: number): number[] {
 interface PageButtonProps {
     children: ReactNode;
     onClick: () => void;
+    label: string;
 }
 
-const PageButton: FC<PageButtonProps> = ({ children, onClick }) => {
+const PageButton: FC<PageButtonProps> = ({ children, onClick, label }) => {
     return (
         <motion.button
             onClick={onClick}
+            aria-label={label}
             className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl flex items-center justify-center text-[#706F78] dark:text-zinc-500 hover:text-[#65656c] dark:hover:text-zinc-300 border border-slate-500/20 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-[0_4px_10px_rgba(0,0,0,0.12)]"
             whileHover={{
                 scale: 1.08,
@@ -76,7 +78,7 @@ export const ContinuousPagination: FC<ContinuousPaginationProps> = ({
     return (
         <div className="flex items-center justify-center gap-1.5 sm:gap-3 text-sm">
             {/* Prev */}
-            <PageButton onClick={() => paginate(currentPage - 1)}>
+            <PageButton label="Previous page" onClick={() => paginate(currentPage - 1)}>
                 <ChevronLeft className="w-5 h-5 sm:w-7 sm:h-7" />
             </PageButton>
 
@@ -89,6 +91,8 @@ export const ContinuousPagination: FC<ContinuousPaginationProps> = ({
                         <motion.button
                             key={page}
                             onClick={() => paginate(page)}
+                            aria-label={`Page ${page}`}
+                            aria-current={isActive ? 'page' : undefined}
                             className={`relative z-10 h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl flex items-center justify-center text-sm font-medium transition-colors duration-300 border border-slate-500/20 dark:border-zinc-800 shadow-[0_4px_10px_rgba(0,0,0,0.12)]
                 ${isActive
                                 ? "text-white"
@@ -156,7 +160,7 @@ export const ContinuousPagination: FC<ContinuousPaginationProps> = ({
             </div>
 
             {/* Next */}
-            <PageButton onClick={() => paginate(currentPage + 1)}>
+            <PageButton label="Next page" onClick={() => paginate(currentPage + 1)}>
                 <ChevronRight className="w-5 h-5 sm:w-7 sm:h-7" />
             </PageButton>
         </div>

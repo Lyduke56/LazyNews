@@ -82,9 +82,11 @@ export function BangerCarouselTitle({
 
 export default function BangerCarouselCard(props: BangerCarouselCardProps) {
   return (
-    <motion.article
+    <motion.button
+      type="button"
       layoutId={props.id}
       onClick={props.onClick}
+      aria-label={`Feature ${props.title || 'article'}`}
       className="relative w-full sm:w-[392px] h-auto sm:h-[200px] border border-neutral-300 rounded-xl p-[12px] shadow-sm overflow-hidden cursor-pointer group hover:shadow-lg transition-all duration-300 flex-shrink-0 bg-[#F4EEE0]"
     >
       {/* Background Image layer with subtle overlay */}
@@ -108,6 +110,6 @@ export default function BangerCarouselCard(props: BangerCarouselCardProps) {
           publishedAt={props.publishedAt}
         />
       </div>
-    </motion.article>
+    </motion.button>
   );
 }

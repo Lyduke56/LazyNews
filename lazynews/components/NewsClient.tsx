@@ -5,7 +5,7 @@ import HeroCard from '@/components/HeroCard';
 import BangerCarouselCard from '@/components/BangerCarouselCard';
 import OtherCard from '@/components/OtherCard';
 import TopicPill from '@/components/TopicPill';
-import { HeroCardSkeleton, BangerCarouselCardSkeleton, OtherCardSkeleton } from '@/components/Skeletons';
+import { HeroCardSkeleton, BangerCarouselCardSkeleton } from '@/components/Skeletons';
 import { ContinuousPagination } from '@/components/ContinuousPagination';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
 import { ChevronLeft, ChevronRight, RefreshCw, Search, X } from 'lucide-react';
@@ -37,6 +37,7 @@ export default function NewsClient({
   const [otherArticles, setOtherArticles] = useState<Article[]>(initialOthers);
   const [fetchedAt, setFetchedAt] = useState(initialFetchedAt);
   const [isRefreshing, startRefresh] = useTransition();
+  const [refreshMessage, setRefreshMessage] = useState('');
 
   // ── Banger carousel ────────────────────────────────────────────────────
   const [activeId, setActiveId] = useState<string>(initialBangers[0]?.id ?? '');
@@ -49,9 +50,10 @@ export default function NewsClient({
 
   // ── Refresh handler ────────────────────────────────────────────────────
   const handleRefresh = useCallback(() => {
+    setRefreshMessage('');
     startRefresh(async () => {
       try {
-        const res = await fetch('/api/articles?force=1');
+        const res = await fetch('/api/articles?force=1', { cache: 'no-store' });
         if (!res.ok) throw new Error(`API returned ${res.status}`);
         const data = await res.json();
         const articles: Article[] = data.articles ?? [];
@@ -65,8 +67,11 @@ export default function NewsClient({
         setActiveId(bangers[0]?.id ?? '');
         setPage([0, 0]);
         setOtherPage([0, 0]);
+        if (data.source === 'stale') setRefreshMessage('Could not fetch new articles. Showing the last available news.');
+        else if (data.fromCache) setRefreshMessage('Already up to date. Try again in a few minutes.');
       } catch (err) {
         console.error('[NewsClient] refresh error:', err);
+        setRefreshMessage('Refresh failed. Please try again later.');
       }
     });
   }, []);
@@ -144,6 +149,7 @@ export default function NewsClient({
               </button>
             </div>
           </div>
+          {refreshMessage && <p role="status" className="font-display text-sm text-[#6b4d31] mt-2">{refreshMessage}</p>}
         </div>
 
         {isRefreshing ? (
@@ -185,6 +191,7 @@ export default function NewsClient({
             <div className="w-full max-w-[1200px] flex items-center gap-[10px] sm:gap-[20px] mt-4 mb-4 px-4 lg:px-0">
               <button
                 onClick={handlePrevPage}
+                disabled={totalPages <= 1}
                 className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-[#e5e5e5] hover:bg-[#d2cac5] transition-colors flex items-center justify-center shrink-0"
                 aria-label="Previous banger articles"
               >
@@ -221,6 +228,7 @@ export default function NewsClient({
 
               <button
                 onClick={handleNextPage}
+                disabled={totalPages <= 1}
                 className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-[#e5e5e5] hover:bg-[#d2cac5] transition-colors flex items-center justify-center shrink-0"
                 aria-label="Next banger articles"
               >
