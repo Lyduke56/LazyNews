@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { formatAbsoluteTime } from '@/lib/formatDate';
 
@@ -14,7 +13,6 @@ interface HeroCardProps {
   sourceUrl?: string;
   sourceName?: string;
   publishedAt?: string;
-  aiReason?: string;
 }
 
 export function HeroCardImage({
@@ -105,9 +103,9 @@ export function HeroCardTitle({
   );
 }
 
-export function HeroCardArticleSummary({ summary, aiReason }: { summary?: string; aiReason?: string }) {
+export function HeroCardArticleSummary({ summary }: { summary?: string }) {
   return (
-    <div className="w-full lg:w-[376px] lg:h-[568px] flex flex-col gap-3 shrink-0">
+    <div className="w-full lg:w-[376px] lg:h-[568px] flex flex-col shrink-0">
       {/* Top box: Article Summary */}
       <div className="flex-1 bg-white/60 backdrop-blur-md rounded-md p-4 border border-white/40 shadow-sm flex flex-col min-h-[200px] lg:min-h-0 relative overflow-hidden group/summary hover:bg-white/80 transition-colors duration-300">
         {/* Subtle gradient overlay */}
@@ -141,22 +139,6 @@ export function HeroCardArticleSummary({ summary, aiReason }: { summary?: string
         </div>
       </div>
 
-      {/* Bottom box: AI Reason */}
-      <div className="h-auto lg:h-[220px] bg-gradient-to-br from-[#1c1a19] to-[#32302f] rounded-md p-4 border border-[#4a4745] shadow-sm flex flex-col shrink-0 text-white relative overflow-hidden group/reason hover:shadow-md transition-shadow duration-300">
-        {/* Glass highlight effect */}
-        <div className="absolute inset-0 bg-white/[0.03] opacity-0 group-hover/reason:opacity-100 transition-opacity duration-300 pointer-events-none" />
-        
-        <div className="flex items-center gap-2 mb-3 shrink-0 relative z-10">
-          <Sparkles className="w-5 h-5 text-[#f6e0b5]" />
-          <span className="font-display text-[18px] sm:text-[20px] font-bold text-[#f6e0b5]">Why it's a Banger</span>
-        </div>
-        {/* Scrollable body */}
-        <div className="overflow-y-auto custom-scrollbar flex-1 pr-3 relative z-10">
-          <p className="font-display text-[14px] sm:text-[15px] text-[#d2cac5] leading-[1.7] text-justify">
-            {aiReason || 'This article was flagged as a banger because it covers high-impact geopolitical events with significant global consequences and trending engagement metrics.'}
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
@@ -197,7 +179,7 @@ export default function HeroCard(props: HeroCardProps) {
         </div>
 
         {/* Right Column: Summaries */}
-        <HeroCardArticleSummary summary={props.summary} aiReason={props.aiReason} />
+        <HeroCardArticleSummary summary={props.summary} />
       </div>
     </motion.article>
   );

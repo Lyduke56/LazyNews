@@ -1,10 +1,7 @@
 name: Refresh News Cache
 
 on:
-  schedule:
-    # Run every hour at :00
-    - cron: '0 * * * *'
-  workflow_dispatch: # Allow manual trigger from GitHub UI
+  workflow_dispatch: # Manual trigger only; scheduled refresh is paused
 
 jobs:
   refresh:
@@ -12,7 +9,7 @@ jobs:
     steps:
       - name: Ping /api/articles to refresh cache
         run: |
-          curl -f -s "${{ secrets.SITE_URL }}/api/articles" \
+          curl -f -s "${{ secrets.SITE_URL }}/api/articles?force=1" \
             -H "Cache-Control: no-cache" \
             --max-time 60 \
             -o /dev/null \

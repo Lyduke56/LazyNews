@@ -14,10 +14,10 @@ export default async function Home() {
 
   try {
     const data = await getArticles();
-    fetchedAt = data.fetchedAt;
+    fetchedAt = data.entry.fetchedAt;
 
-    bangerArticles = data.articles.filter((a) => a.isBanger);
-    otherArticles = data.articles.filter((a) => !a.isBanger);
+    bangerArticles = data.entry.articles.filter((a) => a.isBanger);
+    otherArticles = data.entry.articles.filter((a) => !a.isBanger);
   } catch (err) {
     console.error('[page] Failed to load articles during SSR:', err);
     // NewsClient will receive empty arrays and show empty state gracefully
